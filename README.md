@@ -33,6 +33,16 @@ npm run dev
 
 開発サーバー起動後、`http://localhost:3000` を開きます。
 
+型検査、Lint、テスト、コード整形、本番ビルドの確認には、次のコマンドを使用します。
+
+```bash
+npm run typecheck
+npm run lint
+npm run test
+npm run format:check
+npm run build
+```
+
 ## ドキュメント
 
 - [要求定義](docs/REQUIREMENTS.md)
@@ -42,4 +52,3 @@ npm run dev
 ## セキュリティ
 
 Googleの認証情報、OAuthトークン、Slack Webhook URL、データベース接続情報は環境変数で管理し、リポジトリへ登録しません。
-

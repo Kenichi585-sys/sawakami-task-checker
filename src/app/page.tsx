@@ -1,6 +1,6 @@
 import styles from "./page.module.css";
 
-export default function Home() {
+const Home = () => {
   return (
     <main className={styles.main}>
       <section className={styles.card}>
@@ -12,4 +12,6 @@ export default function Home() {
       </section>
     </main>
   );
-}
+};
+
+export default Home;
