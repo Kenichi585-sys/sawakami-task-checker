@@ -169,6 +169,15 @@ Incoming Webhookは、作成時に選択した1つのチャンネルへ投稿す
 
 今回の推奨は個人用ワークスペースである。本人がWorkspace Primary Ownerになるため、SlackアプリやWebhookの設定権限を自分で管理しやすく、個人的な投資関連通知を仕事用ワークスペースから分離できる。
 
+### Incoming Webhookの呼び出し方
+
+- Webhook URLは`SLACK_WEBHOOK_URL`環境変数へ保存する。
+- Slack専用SDKは追加せず、標準の`fetch`で`text`を含むJSONをPOSTする。
+- Webhook URLが未設定なら`skipped`、HTTP 200なら`succeeded`、それ以外や通信エラーなら`failed`とする。
+- `https://hooks.slack.com/services/...`形式のWebhook URLだけを許可し、リダイレクトは拒否する。
+- Slackから10秒間応答がなければ送信を中断して`failed`とする。
+- Slackから返されたエラー本文やWebhook URLはデータベースへ保存しない。
+
 ## 8. 秘密情報
 
 以下をソースコードへ直接記載しない。
