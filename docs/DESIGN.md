@@ -61,6 +61,8 @@
 - Vercel MarketplaceからPostgreSQLサービスを接続すると、接続情報が環境変数としてプロジェクトへ設定される。
 - NeonはVercel Marketplaceから接続でき、無料プランがある。
 - 今回の保存件数は月2件以下であり、性能よりも学習価値、管理の容易さ、無料枠を重視する。
+- テーブルは1つでクエリも少ないため、MVPではORMを導入せず、Neon Serverless DriverからSQLを実行する。
+- テーブル定義の変更履歴は、リポジトリ内のSQLマイグレーションファイルで管理する。
 
 #### Neon、Supabase、Firebaseの比較
 
@@ -180,7 +182,7 @@ VercelまたはGitHubのSecrets / Environment Variablesへ保存する。
 
 ## 9. データ保存
 
-定期確認結果を `scheduled_checks` テーブルへ保存する案とする。
+定期確認結果を `scheduled_checks` テーブルへ保存する。
 
 ### 保存項目
 
@@ -193,6 +195,8 @@ VercelまたはGitHubのSecrets / Environment Variablesへ保存する。
 - `slack_notification_status`: Slack通知の成否。
 
 `target_month` と `schedule_day` の組み合わせに一意制約を設定し、同じ定期確認の記録を重複させない。
+
+この2項目の組み合わせを主キーとし、別のID列は追加しない。通知状態は `succeeded`、`failed`、`skipped` のいずれかとする。Slack未設定の場合は `skipped` を保存する。
 
 ### 25日の分岐
 
