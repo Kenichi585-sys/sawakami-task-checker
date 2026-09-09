@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -7,7 +8,11 @@ export const metadata: Metadata = {
     "課題アンケートの提出完了メールを確認し、結果を通知する非公式の個人用アプリです。",
 };
 
-const RootLayout = ({ children }: LayoutProps<"/">) => {
+type RootLayoutProps = Readonly<{
+  children: ReactNode;
+}>;
+
+const RootLayout = ({ children }: RootLayoutProps) => {
   return (
     <html lang="ja">
       <body>{children}</body>
