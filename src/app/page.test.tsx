@@ -45,4 +45,17 @@ describe("Home", () => {
         .hasAttribute("disabled"),
     ).toBe(true);
   });
+
+  it("プライバシーポリシーと利用規約へのリンクを表示する", () => {
+    render(<Home />);
+
+    expect(
+      screen
+        .getByRole("link", { name: "プライバシーポリシー" })
+        .getAttribute("href"),
+    ).toBe("/privacy");
+    expect(
+      screen.getByRole("link", { name: "利用規約" }).getAttribute("href"),
+    ).toBe("/terms");
+  });
 });

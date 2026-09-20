@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 
 import styles from "./page.module.css";
@@ -172,6 +173,10 @@ const Home = () => {
           <p>
             本アプリは個人が開発する非公式ツールであり、さわかみ投信株式会社が提供・公認するものではありません。
           </p>
+          <nav className={styles.footerLinks} aria-label="法的情報">
+            <Link href="/privacy">プライバシーポリシー</Link>
+            <Link href="/terms">利用規約</Link>
+          </nav>
         </footer>
       </div>
     </main>

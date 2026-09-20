@@ -219,9 +219,10 @@
 
 .checkButton:focus-visible,
 .githubLink:focus-visible,
-.brand:focus-visible {
+.brand:focus-visible,
+.footerLinks a:focus-visible {
   border-radius: 4px;
-  outline: 3px solid #e2ad3c;
+  outline: 3px solid #8a5a00;
   outline-offset: 4px;
 }
 
@@ -337,6 +338,17 @@
   color: #6b786f;
   font-size: 11px;
   line-height: 1.6;
+}
+
+.footerLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.footerLinks a {
+  color: #40584a;
+  text-underline-offset: 3px;
 }
 
 @media (max-width: 820px) {
