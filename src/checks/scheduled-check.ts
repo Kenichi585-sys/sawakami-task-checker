@@ -15,7 +15,10 @@ import {
   type TargetMonth,
 } from "@/domain/completion-check";
 import { searchCompletionMail, sendGmailMessage } from "@/google/gmail";
-import { createGoogleApiRequest } from "@/google/oauth";
+import {
+  createGoogleApiRequest,
+  isGoogleAuthenticationError,
+} from "@/google/oauth";
 import { sendSlackMessage } from "@/slack/webhook";
 
 const TOKYO_TIME_ZONE = "Asia/Tokyo";
@@ -36,6 +39,7 @@ const receivedAtFormatter = new Intl.DateTimeFormat("ja-JP", {
 
 type ErrorJudgement = Readonly<{
   status: "error";
+  reason: "authentication" | "other";
   targetMonth: TargetMonth;
   completionMailReceivedAt: null;
 }>;
@@ -120,7 +124,10 @@ export const buildNotificationMessage = (
 
   return {
     subject,
-    body: `${target}のGmail確認に失敗しました。手動で確認してください。`,
+    body:
+      judgement.reason === "authentication"
+        ? "Googleの認証が切れています。Gmailとの再接続が必要です。"
+        : `${target}のGmail確認に失敗しました。手動で確認してください。`,
   };
 };
 
@@ -152,11 +159,38 @@ const getJudgement = async (
 ): Promise<CheckJudgement> => {
   try {
     return await dependencies.searchCompletionMail(checkedAt);
-  } catch {
+  } catch (error) {
     return {
       status: "error",
+      reason: isGoogleAuthenticationError(error) ? "authentication" : "other",
       targetMonth: getTargetMonth(checkedAt),
       completionMailReceivedAt: null,
+    };
+  }
+};
+
+type GmailNotificationAttempt = Readonly<{
+  status: NotificationStatus;
+  requiresReconnection: boolean;
+}>;
+
+const trySendGmailNotification = async (
+  message: NotificationMessage,
+  dependencies: ScheduledCheckDependencies,
+  gmailAuthenticationAvailable: boolean,
+): Promise<GmailNotificationAttempt> => {
+  if (!gmailAuthenticationAvailable) {
+    return { status: "failed", requiresReconnection: false };
+  }
+
+  try {
+    await dependencies.sendGmailNotification(message);
+
+    return { status: "succeeded", requiresReconnection: false };
+  } catch (error) {
+    return {
+      status: "failed",
+      requiresReconnection: isGoogleAuthenticationError(error),
     };
   }
 };
@@ -164,21 +198,24 @@ const getJudgement = async (
 const sendNotifications = async (
   message: NotificationMessage,
   dependencies: ScheduledCheckDependencies,
+  gmailAuthenticationAvailable: boolean,
 ) => {
-  const gmailNotification = dependencies
-    .sendGmailNotification(message)
-    .then<NotificationStatus>(() => "succeeded")
-    .catch<NotificationStatus>(() => "failed");
-  const slackNotification = dependencies
-    .sendSlackNotification(`${message.subject}\n\n${message.body}`)
+  const gmailNotification = await trySendGmailNotification(
+    message,
+    dependencies,
+    gmailAuthenticationAvailable,
+  );
+  const slackText = gmailNotification.requiresReconnection
+    ? `${message.subject}\n\n${message.body}\n\nGoogleの認証が切れています。Gmailとの再接続が必要です。`
+    : `${message.subject}\n\n${message.body}`;
+  const slackNotificationStatus = await dependencies
+    .sendSlackNotification(slackText)
     .catch<NotificationStatus>(() => "failed");
 
-  const [gmailNotificationStatus, slackNotificationStatus] = await Promise.all([
-    gmailNotification,
-    slackNotification,
-  ]);
-
-  return { gmailNotificationStatus, slackNotificationStatus };
+  return {
+    gmailNotificationStatus: gmailNotification.status,
+    slackNotificationStatus,
+  };
 };
 
 export const runScheduledCheck = async ({
@@ -216,7 +253,14 @@ export const runScheduledCheck = async ({
 
   const judgement = await getJudgement(checkedAt, dependencies);
   const message = buildNotificationMessage(judgement);
-  const notificationStatuses = await sendNotifications(message, dependencies);
+  const gmailAuthenticationAvailable = !(
+    judgement.status === "error" && judgement.reason === "authentication"
+  );
+  const notificationStatuses = await sendNotifications(
+    message,
+    dependencies,
+    gmailAuthenticationAvailable,
+  );
 
   await dependencies.completeScheduledCheck({
     targetMonth,
