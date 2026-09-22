@@ -87,14 +87,6 @@ npm run test
 npm run build
 ```
 
-## 現在の範囲
-
-応募用MVPとして、公開デモ、Gmail検索・送信、Slack通知、定期確認、データベース保存、自動テストを実装しています。
-
-本人用の手動確認画面と画面認証は今回の公開範囲に含めていません。本人用の本番環境では、Google OAuthをIn productionへ移行し、Vercel CronとGmail・Slack・Neon PostgreSQLの連携を設定しています。
-
-公開トップページのデモ操作は外部APIを呼び出さず、固定したサンプルデータのみを使用しています。
-
 ## ドキュメント
 
 - [要求定義](docs/REQUIREMENTS.md)
